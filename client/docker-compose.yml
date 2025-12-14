@@ -1,0 +1,12 @@
+services:
+  tumanvpn:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: python -m client
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ../data:/app/data
+    ports:
+      - "8080:8080"

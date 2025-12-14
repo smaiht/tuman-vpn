@@ -1,0 +1,27 @@
+# Data directory (contains config and sessions)
+data/
+!data/.gitkeep
+
+# Old files
+*.pyc
+__pycache__/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+tunnel_domains.txt
+domains.txt
+
+# Sessions (old structure)
+sessions/
+
+# Local test storage
+/tmp/tunnel/

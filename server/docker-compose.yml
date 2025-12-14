@@ -1,0 +1,11 @@
+services:
+  tumanvpn:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: python -m server
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ../data:/app/data
+    restart: unless-stopped
