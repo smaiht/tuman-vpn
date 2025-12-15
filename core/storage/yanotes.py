@@ -31,6 +31,7 @@ MAX_SNIPPET_CHARS = 2_000_000  # 2M chars (~4MB bytes)
 BATCH_TIMEOUT = 0.3           # Отправляем batch каждые 300ms
 POLL_INTERVAL = 0.1           # Polling каждые 100ms
 STALE_TIMEOUT_MS = 10 * 60 * 1000  # 10 минут - для долгих видео (чанки не накапливаются, они потребляются)
+BUSY_NOTE_TIMEOUT = 30            # 30 сек - если заметка занята дольше, считаем её свободной
 DEBUG_QUEUE = False           # Логировать каждый item в очереди
 
 TYPE_DATA = 'DATA'
@@ -88,7 +89,7 @@ class YaNotesStorage(BaseStorage):
         # Note pool state
         self._pool_lock = threading.Lock()
         self._free_notes = set(self.write_pool)  # All start as free
-        self._busy_notes = set()
+        self._busy_notes = {}  # {note_id: timestamp} - когда заметка стала busy
         
         # Batch queue
         self.batch_queue = queue.Queue()
@@ -193,18 +194,26 @@ class YaNotesStorage(BaseStorage):
         }
     
     def _get_free_note(self) -> Optional[str]:
-        """Get free note or None if all busy."""
+        """Get free note or None if all busy. Auto-releases notes busy > BUSY_NOTE_TIMEOUT."""
+        now = time.time()
         with self._pool_lock:
+            # Auto-release stale busy notes
+            stale = [nid for nid, ts in self._busy_notes.items() if now - ts > BUSY_NOTE_TIMEOUT]
+            for nid in stale:
+                del self._busy_notes[nid]
+                self._free_notes.add(nid)
+                self._log(f"⏰ >> AUTO-RELEASE [{nid}] busy > {BUSY_NOTE_TIMEOUT}s")
+            
             if self._free_notes:
                 nid = self._free_notes.pop()
-                self._busy_notes.add(nid)
+                self._busy_notes[nid] = now
                 return nid
         return None
     
     def _release_note(self, nid: str):
         """Return note to free pool."""
         with self._pool_lock:
-            self._busy_notes.discard(nid)
+            self._busy_notes.pop(nid, None)
             self._free_notes.add(nid)
     
     def _pool_status(self) -> str:

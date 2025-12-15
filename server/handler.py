@@ -37,6 +37,11 @@ class RequestHandler:
                 self.tunnel_handler.handle(req)
                 return
             
+            if method == 'CLOSE':
+                # Tunnel close request - just log it, tunnel already closed
+                self._log(f"[←] Tunnel closed by client (id={request_id})")
+                return
+            
             self._execute_http(req, request_id)
             
         except Exception as e:

@@ -10,3 +10,4 @@ services:
       - ../data:/app/data
     ports:
       - "8080:8080"
+      - "1080:1080"

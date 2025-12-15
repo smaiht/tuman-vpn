@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Optional
 
 DEFAULT_SETTINGS = {
-    "proxy_port": 8080,
+    "proxy_mode": "http",       # 'http', 'socks5', or 'both'
+    "proxy_port": 8080,         # HTTP proxy port
+    "socks5_port": 1080,        # SOCKS5 proxy port
     "timeout": 120,
     "chunk_size": 500000,
     "chunk_idle_timeout": 0.1,

@@ -25,3 +25,7 @@ sessions/
 
 # Local test storage
 /tmp/tunnel/
+
+
+android
+tuman*.yaml
