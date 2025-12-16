@@ -2,6 +2,15 @@
 set -e
 cd "$(dirname "$0")"
 
+# Определяем Python
+if command -v python3 &> /dev/null; then
+    PY=python3
+elif command -v python &> /dev/null; then
+    PY=python
+else
+    PY=""
+fi
+
 echo ""
 echo "+------------------------------------------+"
 echo "|          TumanVPN Setup                  |"
@@ -68,12 +77,25 @@ EOF
         echo ""
         echo "[*] Проверка заметок Yandex Notes..."
         
-        # Проверяем наличие Python и httpx
-        if ! command -v python3 &> /dev/null; then
-            echo "[!] Python3 не найден, пропускаем проверку заметок"
+        # Проверяем наличие Python
+        if [[ -z "$PY" ]]; then
+            echo "[!] Python не найден, пропускаем проверку заметок"
         else
+            # Создаём venv если нет
+            if [[ ! -d ".venv" ]]; then
+                echo "[*] Создаём виртуальное окружение..."
+                $PY -m venv .venv
+            fi
+            source .venv/bin/activate
+            
+            # Проверяем httpx
+            if ! python -c "import httpx" 2>/dev/null; then
+                echo "[*] Устанавливаем зависимости..."
+                pip install httpx -q
+            fi
+            
             # Запускаем проверку
-            POOL_CHECK=$(python3 wizard/yanotes_setup.py check 2>/dev/null || echo "ERROR")
+            POOL_CHECK=$(python wizard/yanotes_setup.py check 2>/dev/null || echo "ERROR")
             
             if [[ "$POOL_CHECK" == "NO_POOL" ]]; then
                 echo "[!] Файл пулов заметок не найден"
@@ -81,7 +103,7 @@ EOF
                 read -p "Создать заметки? [Y/n]: " create_choice
                 if [[ ! "$create_choice" =~ ^[Nn] ]]; then
                     echo "[*] Создание заметок (это займёт ~30 сек)..."
-                    python3 wizard/yanotes_setup.py create
+                    python wizard/yanotes_setup.py create
                     if [[ $? -eq 0 ]]; then
                         echo "[OK] Заметки созданы!"
                     else
@@ -111,7 +133,7 @@ EOF
                 read -p "Пересоздать заметки? [y/N]: " recreate_choice
                 if [[ "$recreate_choice" =~ ^[Yy] ]]; then
                     echo "[*] Создание заметок (это займёт ~30 сек)..."
-                    python3 wizard/yanotes_setup.py create
+                    python wizard/yanotes_setup.py create
                     if [[ $? -eq 0 ]]; then
                         echo "[OK] Заметки созданы!"
                     else
@@ -213,7 +235,7 @@ EOF
         echo "[OK] Конфигурация получена!"
         echo "    - cookies: $(wc -l < data/diskcookies.txt | tr -d ' ') строк"
         echo "    - config: data/config.json"
-        echo "    - pool: $(cat data/yanotes_pool.json | python3 -c 'import sys,json; d=json.load(sys.stdin); print(f"{len(d.get(\"client_pool\",[]))} клиент, {len(d.get(\"server_pool\",[]))} сервер")' 2>/dev/null || echo 'загружен')"
+        echo "    - pool: $(cat data/yanotes_pool.json | $PY -c 'import sys,json; d=json.load(sys.stdin); print(f"{len(d.get(\"client_pool\",[]))} клиент, {len(d.get(\"server_pool\",[]))} сервер")' 2>/dev/null || echo 'загружен')"
         
         # Запуск клиента
         echo ""

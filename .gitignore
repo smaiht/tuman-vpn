@@ -29,3 +29,5 @@ sessions/
 
 android
 tuman*.yaml
+
+.venv
