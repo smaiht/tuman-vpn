@@ -159,8 +159,8 @@ EOF
         
         # Запуск сервера
         echo "Запустить сервер?"
-        echo "  [1] Да, в фоне (up -d) - рекомендуется"
-        echo "  [2] Да, интерактивно (up)"
+        echo "  [1] Да, в фоне (cd server && docker compose up -d)"
+        echo "  [2] Да, интерактивно (cd server && docker compose up)"
         echo "  [3] Нет"
         read -p "Выбор [1]: " run_choice
         run_choice="${run_choice:-1}"
