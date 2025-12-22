@@ -1,5 +1,5 @@
 # Data directory (contains config and sessions)
-data/
+data/*
 !data/.gitkeep
 
 # Old files
